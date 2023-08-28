@@ -19,6 +19,7 @@
             $('#<%=H.ClientID%>').val(parseInt(c.h));
         }
     </script>
+
     <style>
         .center-content {
             text-align: center;
@@ -49,7 +50,7 @@
         <tr>
             <td style="width: 127px; height: 37px">Select Image File : </td>
             <td style="width: 277px; height: 37px">
-                <asp:FileUpload ID="FU1" runat="server" Height="26px" Width="190px" CssClass="col-xs-offset-0" />
+                <asp:FileUpload ID="FU1" runat="server" Height="26px" Width="190px" MaximumFileSize="10240" CssClass="col-xs-offset-0" />
             </td>
             <td style="height: 37px; width: 122px;">
                 <asp:Button ID="btnUpload" runat="server" Text="Upload" OnClick="btnUpload_Click" Height="26px" Width="95px" />
@@ -66,30 +67,11 @@
             </td>
         </tr>
     </table>
-    <%--<asp:Panel ID="panCrop" runat="server" Visible="false">
-        <table class="nav-justified">
-            <tr>
-                <td>
-                    <asp:Label ID="Label1" runat="server" Text="Document Viewer" ForeColor="Red" /></td>
-                <td>
-                    <asp:Label ID="Label2" runat="server" Text="Text Viewer" ForeColor="Red" /></td>
-            </tr>
-            <tr>
-                <td class="text-justify">
-                    <asp:Image ID="imgUpload" runat="server" Width="79%" Height="152px" Style="margin-right: 0px" />
-         
-                </td>
-                <td class="text-justify">
-                    <asp:TextBox ID="SelectedTextTextBox" runat="server" TextMode="MultiLine" Rows="10" Width="96%" Height="281px" ReadOnly="True"></asp:TextBox>
-                </td>
-            </tr>
-        </table>
-
-    </asp:Panel>--%>
     <div class="container">
         <div>
             <asp:Label ID="Label1" runat="server" Text="Document Viewer" ForeColor="Red" />
             <asp:Image ID="imgUpload" runat="server" Style="max-width: 50%; height: auto;" BorderColor="#3366FF" BorderStyle="Solid" Height="281px" Width="96%" />
+
             <asp:Label ID="Label2" runat="server" Text="Text Viewer" ForeColor="Red" />
             <asp:TextBox ID="SelectedTextTextBox" runat="server" TextMode="MultiLine" Rows="10" Width="96%" Height="281px" ReadOnly="True"></asp:TextBox>
         </div>
@@ -99,4 +81,5 @@
     <asp:HiddenField ID="Y" runat="server" />
     <asp:HiddenField ID="W" runat="server" />
     <asp:HiddenField ID="H" runat="server" />
+
 </asp:Content>

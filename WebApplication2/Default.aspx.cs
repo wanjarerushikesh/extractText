@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Web.UI;
 using IronOcr;
 using IronPdf;
@@ -11,11 +12,50 @@ namespace WebApplication2
     public partial class _Default : Page
     {
         string pdfFolderPath = "";
+        string pdfFolderName = "";
+
+        private string[] pdfImagePaths;
+        private int currentImageIndex = 0;
+        private string convImage = "";
+        private string filePath;
+
         protected void Page_Load(object sender, EventArgs e)
         {
             Label1.Visible = false;
             Label2.Visible = false;
             SelectedTextTextBox.Visible = false;
+
+            // Always retrieve the value of convImage from ViewState
+            if (ViewState["ConvImage"] != null)
+            {
+                convImage = ViewState["ConvImage"].ToString();
+            }
+
+            if (!IsPostBack)
+            {
+                // Load the PDF image paths when a PDF is uploaded
+                if (pdfFolderName != "")
+                {
+                    pdfImagePaths = Directory.GetFiles(pdfFolderPath, "*.png");
+                    ViewState["PdfImagePaths"] = pdfImagePaths; // Store in ViewState
+                    ViewState["PDFFolderName"] = pdfFolderName; // Store pdfFolderName in ViewState
+                    btnPrev.Visible = pdfImagePaths.Length > 0;
+                    btnNext.Visible = pdfImagePaths.Length > 0;
+                }
+             
+            }
+            else
+            {
+                // Retrieve pdfFolderName and currentImageIndex from ViewState
+                if (ViewState["PDFFolderName"] != null)
+                {
+                    pdfFolderName = ViewState["PDFFolderName"].ToString();
+                }
+                if (ViewState["CurrentImageIndex"] != null)
+                {
+                    currentImageIndex = (int)ViewState["CurrentImageIndex"];
+                }
+            }
         }
 
         protected void btnUpload_Click(object sender, EventArgs e)
@@ -37,12 +77,20 @@ namespace WebApplication2
                     if (ext == ".pdf")
                     {
                         // Create a folder with the same name as the PDF file
-                        string pdfFolderName = Path.GetFileNameWithoutExtension(orgFileName);
+                        pdfFolderName = Path.GetFileNameWithoutExtension(orgFileName);
+                        ViewState["PDFFolderName"] = pdfFolderName;
+
                         pdfFolderPath = Path.Combine(Server.MapPath("~/UploadImages"), pdfFolderName);
                         Directory.CreateDirectory(pdfFolderPath);
 
                         PdfDocument pdf = PdfDocument.FromFile(uploadFilePath);
                         pdf.RasterizeToImageFiles(Path.Combine(pdfFolderPath, "*.png"));
+
+                        pdfImagePaths = Directory.GetFiles(pdfFolderPath, "*.png");
+                        Array.Sort(pdfImagePaths, new NumericFilenameComparer());
+                        ViewState["PdfImagePaths"] = pdfImagePaths;
+
+                        DisplayFirstImage();
                     }
                     else
                     {
@@ -64,7 +112,15 @@ namespace WebApplication2
         {
             // Crop Image Here & Save
             string fileName = Path.GetFileName(imgUpload.ImageUrl);
-            string filePath = Path.Combine(Server.MapPath("~/UploadImages"), fileName);
+            if (!string.IsNullOrEmpty(convImage))
+            {
+                filePath = Server.MapPath(convImage);
+            }
+            else
+            {
+                filePath = Path.Combine(Server.MapPath("~/UploadImages"), fileName);
+            }
+
             string cropFileName = "crop_" + fileName;
             string cropFilePath = Path.Combine(Server.MapPath("~/UploadImages"), cropFileName);
 
@@ -92,7 +148,7 @@ namespace WebApplication2
                     var ocr = new AutoOcr();
                     var result = ocr.Read(cropFilePath);
                     SelectedTextTextBox.Visible = true;
-                    SelectedTextTextBox.Text = result.Text; 
+                    SelectedTextTextBox.Text = result.Text;
                 }
                 catch (Exception ex)
                 {
@@ -107,8 +163,81 @@ namespace WebApplication2
 
         private bool IsImageFile(string extension)
         {
-            string[] imageExtensions = { ".jpg", ".jpeg", ".png", ".pdf", ".tiff", ".bmp" };
+            string[] imageExtensions = { ".jpg", ".jpeg", ".png", ".tiff", ".bmp" };
             return Array.Exists(imageExtensions, ext => ext == extension);
+        }
+
+        protected void btnPrev_Click(object sender, EventArgs e)
+        {
+            pdfImagePaths = ViewState["PdfImagePaths"] as string[];
+            if (pdfImagePaths != null && currentImageIndex > 0)
+            {
+                currentImageIndex--;
+                ViewState["CurrentImageIndex"] = currentImageIndex; // Store initial value in ViewState
+                DisplayImage();
+            }
+        }
+        private void DisplayFirstImage()
+        {
+            if (pdfImagePaths.Length > 0)
+            {
+                currentImageIndex = 0;
+                DisplayImage();
+            }
+        }
+
+        protected void btnNext_Click(object sender, EventArgs e)
+        {
+            pdfImagePaths = ViewState["PdfImagePaths"] as string[]; // Retrieve from ViewState
+            if (pdfImagePaths != null && currentImageIndex < pdfImagePaths.Length - 1)
+            {
+                currentImageIndex++;
+                ViewState["CurrentImageIndex"] = currentImageIndex; // Store updated value in ViewState
+                DisplayImage();
+            }
+        }
+
+        private void DisplayImage()
+        {
+            if (pdfImagePaths.Length > 0 && currentImageIndex >= 0 && currentImageIndex < pdfImagePaths.Length)
+            {
+                convImage = pdfImagePaths[currentImageIndex];
+
+                string virtualImagePath = "~/UploadImages/" + pdfFolderName + "/" + Path.GetFileName(pdfImagePaths[currentImageIndex]);
+                imgUpload.ImageUrl = virtualImagePath;
+
+                ViewState["ConvImage"] = virtualImagePath;
+
+                SelectedTextTextBox.Text = "";
+                lblMsg.Text = "";
+
+                SelectedTextTextBox.Visible = false;
+                Label2.Visible = false;
+            }
+        }
+
+        public class NumericFilenameComparer : IComparer<string>
+        {
+            public int Compare(string x, string y)
+            {
+                int numberX = ExtractNumber(x);
+                int numberY = ExtractNumber(y);
+
+                return numberX.CompareTo(numberY);
+            }
+
+            private int ExtractNumber(string s)
+            {
+                string filename = Path.GetFileNameWithoutExtension(s);
+                string numberPart = new string(filename.SkipWhile(c => !char.IsDigit(c)).TakeWhile(char.IsDigit).ToArray());
+
+                int number;
+                if (int.TryParse(numberPart, out number))
+                {
+                    return number;
+                }
+                return -1;
+            }
         }
     }
 }

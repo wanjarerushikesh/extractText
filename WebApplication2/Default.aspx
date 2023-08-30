@@ -67,15 +67,22 @@
             </td>
         </tr>
     </table>
-    <div class="container">
-        <div>
-            <asp:Label ID="Label1" runat="server" Text="Document Viewer" ForeColor="Red" />
-            <asp:Image ID="imgUpload" runat="server" Style="max-width: 50%; height: auto;" BorderColor="#3366FF" BorderStyle="Solid" Height="281px" Width="96%" />
 
-            <asp:Label ID="Label2" runat="server" Text="Text Viewer" ForeColor="Red" />
-            <asp:TextBox ID="SelectedTextTextBox" runat="server" TextMode="MultiLine" Rows="10" Width="96%" Height="281px" ReadOnly="True"></asp:TextBox>
-        </div>
+    <div class="container">
+    <div>
+        <asp:Label ID="Label1" runat="server" Text="Document Viewer" ForeColor="Red" />
+        <asp:Image ID="imgUpload" runat="server" Style="max-width: 50%; height: auto;" BorderColor="#3366FF" BorderStyle="Solid" Height="281px" Width="96%" />
+
+        <asp:Label ID="Label2" runat="server" Text="Text Viewer" ForeColor="Red" />
+        <asp:TextBox ID="SelectedTextTextBox" runat="server" TextMode="MultiLine" Rows="10" Width="96%" Height="281px" ReadOnly="True"></asp:TextBox>
     </div>
+</div>
+
+<!-- Add Previous and Next buttons -->
+<div class="center-content">
+    <asp:Button ID="btnPrev" runat="server" Text="Previous" OnClick="btnPrev_Click" CssClass="btn" />
+    <asp:Button ID="btnNext" runat="server" Text="Next" OnClick="btnNext_Click" CssClass="btn" />
+</div>
 
     <asp:HiddenField ID="X" runat="server" />
     <asp:HiddenField ID="Y" runat="server" />
